@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiWayIf #-}
+
 module Reduce where
 
 import Data.Char (chr, ord)
@@ -6,23 +8,43 @@ import Types
 dc :: Context
 dc = defaultContext
 
-basicRawReduce :: Expr -> Expr
-basicRawReduce f = start f 0
+basicReduce :: Expr -> Result Expr
+basicReduce = reduce dc
+
+reduce :: Context -> Expr -> Result Expr
+reduce c e0 = start e0 0
   where
-    l = size f
+    l0 = size e0
     start e n =
-      let e' = basicRawReduceOnce e
+      let e' = iterate basicRawReduceOnce e !! reduceStepSize c
           s = size e'
-       in if n >= maxReductions dc || e == e' || s > (maxSizeRel dc * l) || s > maxSizeAbs dc
-            then e
-            else start e' (n + 1)
+       in if
+              | e == e' -> Right e
+              | n >= maxReductions c
+                  || s > (maxSizeRel c * l0)
+                  || s > maxSizeAbs c ->
+                Left $ ReduceError "Doesn't halt" e0
+              | otherwise -> start e' (n + 1)
 
 basicRawReduceOnce :: Expr -> Expr
-basicRawReduceOnce v@(Var _) = v
-basicRawReduceOnce n@(Name _) = n
-basicRawReduceOnce a@(Abstr _ _) = if tryEta dc then eta a else a
-basicRawReduceOnce a@(Appl (Abstr _ _) _) = beta a
-basicRawReduceOnce a@(Appl e f) = basicRawReduceOnce e `Appl` basicRawReduceOnce f
+basicRawReduceOnce = rawReduceOnce dc
+
+rawReduceOnce :: Context -> Expr -> Expr
+rawReduceOnce c = fn
+  where
+    fn v@(Var _) = v
+    fn n@(Name _) = n
+    fn a@(Abstr _ (Appl _ (Var _))) = if tryEta c then eta a else a
+    fn a@(Abstr v e) = if tryEager c then Abstr v $ tryReduceOnce c e else a
+    fn a@(Appl (Abstr _ _) _) = beta a
+    fn a@(Appl e f) = fn e `Appl` fn f
+
+tryReduceOnce :: Context -> Expr -> Expr
+tryReduceOnce c e =
+  let e' = rawReduceOnce c e
+      l = size e
+      l' = size e'
+   in if l < l' then e else e'
 
 alpha :: Expr -> Expr
 alpha (Abstr v e) = Abstr v' (rawBeta v (Var v') e)
@@ -64,6 +86,7 @@ unboundIn a (Appl e f) = unboundIn a e || unboundIn a f
 unboundIn _ _ = False
 
 infixr 9 ...
+
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)
 
