@@ -6,10 +6,12 @@ import Print
 import Reduce
 import Types
 
-tests1 :: [(  String, -- Name  
-              String, -- Input
-              Expr    -- Parse output
-          )]
+tests1 ::
+  [ ( String, -- Name
+      String, -- Input
+      Expr -- Parse output
+    )
+  ]
 tests1 =
   [ ( "Var test",
       "a",
@@ -63,61 +65,44 @@ tests2 =
     ),
     ( "5 duplications",
       "(\\fx.f(f(f(f(fx)))))(\\a.aa)p",
-      Appl ( Appl (Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x')))))))) (Abstr 'a' (Appl (Var 'a') (Var 'a')))) (Var 'p'),
+      Appl (Appl (Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x')))))))) (Abstr 'a' (Appl (Var 'a') (Var 'a')))) (Var 'p'),
       undefined
     )
   ]
 
 tests2' :: [(String, String, Expr)]
-tests2' = map (\(a,b,c,_) -> (a,b,c)) tests2
+tests2' = map (\(a, b, c, _) -> (a, b, c)) tests2
+
+commandTests :: [(String, String, Command)]
+commandTests =
+  [ ( "quit command test",
+      "quit",
+      CommandQuit
+    ),
+    ( "let command test",
+      "let 5 \\fx.f(f(f(f(fx))))",
+      CommandLet
+        "5"
+        (Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x'))))))))
+    ),
+    ( "load command test",
+      "load C:\\stuff\\haskell\\lambda.txt",
+      CommandLoad " C:\\stuff\\haskell\\lambda.txt"
+    )
+  ]
 
 testParse :: Result Bool
-testParse = foldl1 (&&&) (uncurry3 doTest <$> (tests1 ++ tests2'))
-    &&& doTestC
-      "quit command test"
-      "quit"
-      CommandQuit
-    &&& doTestC
-      "let command test"
-      "let 5 \\fx.f(f(f(f(fx))))"
-      ( CommandLet
-          "5"
-          ( Abstr
-              'f'
-              ( Abstr
-                  'x'
-                  ( Appl
-                      (Var 'f')
-                      ( Appl
-                          (Var 'f')
-                          ( Appl
-                              (Var 'f')
-                              ( Appl
-                                  (Var 'f')
-                                  ( Appl
-                                      (Var 'f')
-                                      (Var 'x')
-                                  )
-                              )
-                          )
-                      )
-                  )
-              )
-          )
-      )
-    &&& doTestC
-      "load command test"
-      "load C:\\stuff\\haskell\\lambda.txt"
-      (CommandLoad " C:\\stuff\\haskell\\lambda.txt")
+testParse =
+  foldl1 (&&&) (uncurry3 doTest <$> (tests1 ++ tests2'))
+    &&& foldl1 (&&&) (uncurry3 doTestC <$> commandTests)
   where
-
     testEq :: Statement -> Statement -> Bool
     testEq (Command a) (Command b) = a == b
     testEq (Expr a) (Expr b) = alphaEq a b
     testEq _ _ = False
 
     uncurry3 :: (a -> b -> c -> r) -> (a, b, c) -> r
-    uncurry3 f (a,b,c) = f a b c
+    uncurry3 f (a, b, c) = f a b c
 
     doTest c str r = doTestS c str (Expr r)
     doTestC c str r = doTestS c str (Command r)
