@@ -1,6 +1,6 @@
 module Types where
 
-import Data.Map ( Map, empty )
+import Data.Map (Map, empty)
 import Text.Parsec.Error (ParseError)
 
 data Expr
@@ -24,18 +24,20 @@ data Context = Context
     maxSizeAbs :: Int,
     tryEta :: Bool,
     tryEager :: Bool
-  } deriving (Show)
+  }
+  deriving (Show)
 
 defaultContext :: Context
-defaultContext = Context 
-  { quit = False, 
-    names = empty, 
-    maxReductions = 100, 
-    maxSizeAbs = 500,
-    maxSizeRel = 40,
-    tryEta = True,
-    tryEager = True
-  }
+defaultContext =
+  Context
+    { quit = False,
+      names = empty,
+      maxReductions = 100,
+      maxSizeAbs = 500,
+      maxSizeRel = 40,
+      tryEta = True,
+      tryEager = True
+    }
 
 data Statement
   = Command Command

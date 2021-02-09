@@ -14,8 +14,6 @@ parseBy par name str = case parse par name str of
   Right t -> Right t
   Left pe -> Left $ ParseError pe
 
-
-
 parseStmt :: SourceName -> String -> Result Statement
 parseStmt = parseBy start
 
