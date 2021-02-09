@@ -76,6 +76,6 @@ parseInput = getLine >>= parseTest start
 
 command :: Parser Command
 command =
-  try (CommandLet <$ string "let" <* ws' <*> nameStr <* ws <*> expr)
-    <|> (CommandQuit <$ string "quit")
-    <|> (CommandLoad <$ string "load" <* ws' <*> manyTill anyChar eof)
+  try (CommandLet <$ string "let" <* ws' <*> nameStr <* ws <*> expr <* ws)
+    <|> (CommandQuit <$ string "quit" <* ws)
+    <|> (CommandLoad <$ string "load" <* ws' <*> manyTill anyChar eof <* ws)

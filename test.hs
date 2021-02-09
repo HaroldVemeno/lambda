@@ -87,7 +87,7 @@ commandTests =
     ),
     ( "load command test",
       "load C:\\stuff\\haskell\\lambda.txt",
-      CommandLoad " C:\\stuff\\haskell\\lambda.txt"
+      CommandLoad "C:\\stuff\\haskell\\lambda.txt"
     )
   ]
 
