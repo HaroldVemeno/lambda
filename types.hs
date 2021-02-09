@@ -20,6 +20,7 @@ data Context = Context
   { quit :: Bool,
     names :: Map String Expr,
     maxReductions :: Int,
+    reduceStepSize :: Int,
     maxSizeRel :: Int,
     maxSizeAbs :: Int,
     tryEta :: Bool,
@@ -32,8 +33,9 @@ defaultContext =
   Context
     { quit = False,
       names = empty,
-      maxReductions = 100,
-      maxSizeAbs = 500,
+      maxReductions = 200,
+      reduceStepSize = 3,
+      maxSizeAbs = 1000,
       maxSizeRel = 40,
       tryEta = True,
       tryEager = True
@@ -46,7 +48,7 @@ data Statement
 
 data Error
   = ParseError ParseError
-  | ReduceError String
+  | ReduceError String Expr
   | ReplError String
   | TestError String
   deriving (Show, Eq)
