@@ -1,6 +1,6 @@
-{-# LANGUAGE FlexibleContexts #-}
+--{-# LANGUAGE FlexibleContexts #-}
 
-module Parse (parseExpr, parseStmt, parseInput) where
+module Parse (parseExpr, parseStmt) where
 
 import Control.Applicative (liftA2)
 import Data.Bifunctor
@@ -70,9 +70,6 @@ name = Name <$> nameStr
 
 nameStr :: Parser String
 nameStr = (:) <$> (upper <|> digit) <*> many alphaNum
-
-parseInput :: IO ()
-parseInput = getLine >>= parseTest start
 
 command :: Parser Command
 command =
