@@ -3,7 +3,6 @@ module Print (showExpr, printExpr) where
 import Control.Monad
 import Data.List
 import Types
-import Debug.Trace 
 
 showExpr :: Result Expr -> Result String
 showExpr = fmap rawShowExpr
@@ -38,7 +37,7 @@ simpleRawShowTree = intercalate "\n" . lol
 
     end a = ("`-" ++ head a) : (("  " ++) <$> tail a)
 
-{- 
+{-
 >>> rawShowTree $ Appl (Abstr 'a' (Abstr 'b' (Var 'a'))) (Abstr 'b' (Appl (Appl (Var 'a') (Var 'c') ) (Var 'a')))
 "Appl
 |-Abstr a b
@@ -59,7 +58,7 @@ rawShowTree = intercalate "\n" . lol
     lol (Name n) = ["Name " ++ n]
     lol (Appl a b) = case a of
       --  ¯\_(ツ)_/¯ lol no
-      Appl _ _ -> join [[head $ lol a], takeWhile ((/="`-") . take 2) . tail . lol $ a, mid . fmap (drop 2) . dropWhile ((/="`-") . take 2) . tail . lol $ a, end . lol $ b ]
+      Appl _ _ -> join [[head $ lol a], takeWhile ((/= "`-") . take 2) . tail . lol $ a, mid . fmap (drop 2) . dropWhile ((/= "`-") . take 2) . tail . lol $ a, end . lol $ b]
       _ -> join [["Appl"], mid $ lol a, end $ lol b]
     lol (Abstr c e) = case e of
       Abstr _ _ -> join [["Abstr " ++ [c] ++ " " ++ drop 6 (head $ lol e)], tail $ lol e]
