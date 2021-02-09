@@ -9,19 +9,24 @@ import Text.Parsec
 import Text.Parsec.String
 import Types
 
+parseBy :: Parser a -> SourceName -> String -> Result a
+parseBy par name str = case parse par name str of
+  Right t -> Right t
+  Left pe -> Left $ ParseError pe
+
+
 
 parseStmt :: SourceName -> String -> Result Statement
-parseStmt name str = case parse start name str of
-  Right t -> Right t
-  Left pe -> Left $ ParseError pe
+parseStmt = parseBy start
 
 parseExpr :: SourceName -> String -> Result Expr
-parseExpr name str = case parse startExpr name str of
-  Right t -> Right t
-  Left pe -> Left $ ParseError pe
+parseExpr = parseBy startExpr
 
 ws :: Parser ()
 ws = spaces
+
+ws' :: Parser ()
+ws' = space *> ws
 
 start :: Parser Statement
 start = try (Command <$> startCommand) <|> Expr <$> startExpr
@@ -54,7 +59,7 @@ var :: Parser Expr
 var = Var <$> lower
 
 appl :: Parser Expr
-appl = foldl1 Appl <$> many1 applExpr
+appl = foldl1 Appl <$> many1 (applExpr <* ws)
   where
     applExpr :: Parser Expr
     applExpr = parened <|> abstr <|> try name <|> var
@@ -73,6 +78,6 @@ parseInput = getLine >>= parseTest start
 
 command :: Parser Command
 command =
-  try (CommandLet <$ string "let" <* ws <*> nameStr <* ws <*> expr)
+  try (CommandLet <$ string "let" <* ws' <*> nameStr <* ws <*> expr)
     <|> (CommandQuit <$ string "quit")
-    <|> (CommandLoad <$ string "load" <*> manyTill anyChar eof)
+    <|> (CommandLoad <$ string "load" <* ws' <*> manyTill anyChar eof)
