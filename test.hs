@@ -75,18 +75,18 @@ tests2' = map (\(a, b, c, _) -> (a, b, c)) tests2
 
 commandTests :: [(String, String, Command)]
 commandTests =
-  [ ( "quit command test",
-      "quit",
+  [ ( "Quit command test",
+      "Quit",
       CommandQuit
     ),
-    ( "let command test",
-      "let 5 \\fx.f(f(f(f(fx))))",
+    ( "Let command test",
+      "Let 5 \\fx.f(f(f(f(fx))))",
       CommandLet
         "5"
         (Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x'))))))))
     ),
-    ( "load command test",
-      "load C:\\stuff\\haskell\\lambda.txt",
+    ( "Load command test",
+      "Load C:\\stuff\\haskell\\lambda.txt",
       CommandLoad "C:\\stuff\\haskell\\lambda.txt"
     )
   ]
