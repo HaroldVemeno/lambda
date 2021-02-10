@@ -14,6 +14,7 @@ data Command
   = CommandQuit
   | CommandLoad String
   | CommandLet String Expr
+  | CommandTree Expr
   deriving (Show, Eq)
 
 data Context = Context
@@ -23,8 +24,7 @@ data Context = Context
     reduceStepSize :: Int,
     maxSizeRel :: Int,
     maxSizeAbs :: Int,
-    tryEta :: Bool,
-    tryEager :: Bool
+    tryEta :: Bool
   }
   deriving (Show)
 
@@ -37,8 +37,7 @@ defaultContext =
       reduceStepSize = 3,
       maxSizeAbs = 1000,
       maxSizeRel = 40,
-      tryEta = True,
-      tryEager = True
+      tryEta = True
     }
 
 data Statement
@@ -51,6 +50,6 @@ data Error
   | ReduceError String Expr
   | ReplError String
   | TestError String
-  deriving (Show, Eq)
+  deriving (Eq)
 
 type Result a = Either Error a
