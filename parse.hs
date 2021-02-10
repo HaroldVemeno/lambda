@@ -73,6 +73,7 @@ nameStr = (:) <$> (upper <|> digit) <*> many alphaNum
 
 command :: Parser Command
 command =
-  try (CommandLet <$ string "let" <* ws' <*> nameStr <* ws <*> expr <* ws)
-    <|> (CommandQuit <$ string "quit" <* ws)
-    <|> (CommandLoad <$ string "load" <* ws' <*> manyTill anyChar eof <* ws)
+  try (CommandLet <$ string "Let" <* ws' <*> nameStr <* ws <*> expr <* ws)
+    <|> (CommandQuit <$ string "Quit" <* ws)
+    <|> (CommandLoad <$ string "Load" <* ws' <*> manyTill anyChar eof <* ws)
+    <|> (CommandTree <$ string "Tree" <* ws' <*> expr)
