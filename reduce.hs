@@ -3,6 +3,7 @@
 module Reduce where
 
 import Data.Char (chr, ord)
+import Debug.Trace
 import Types
 
 dc :: Context
@@ -11,40 +12,54 @@ dc = defaultContext
 basicReduce :: Expr -> Result Expr
 basicReduce = reduce dc
 
+data ReduceState = ReduceState
+  { reduced :: Bool,
+    wasEta :: Bool
+  }
+
+drs :: ReduceState
+drs =
+  ReduceState
+    { reduced = False,
+      wasEta = False
+    }
+
 reduce :: Context -> Expr -> Result Expr
 reduce c e0 = start e0 0
   where
     l0 = size e0
     start e n =
-      let e' = iterate basicRawReduceOnce e !! reduceStepSize c
-          s = size e'
+      let red = iterate (rawReduceOnce c drs . snd) (drs, e)
+          (lst, e') = red !! reduceStepSize c
+          l = size e'
        in if
-              | e == e' -> Right e
+              | e == e' || not (reduced lst) -> Right e'
               | n >= maxReductions c
-                  || s > (maxSizeRel c * l0)
-                  || s > maxSizeAbs c ->
+                  || l > (maxSizeRel c * l0)
+                  || l > maxSizeAbs c ->
                 Left $ ReduceError "Doesn't halt" e0
-              | otherwise -> start e' (n + 1)
+              | otherwise -> start e' (trace (show n) $ n + reduceStepSize c)
 
 basicRawReduceOnce :: Expr -> Expr
-basicRawReduceOnce = rawReduceOnce dc
+basicRawReduceOnce = snd . rawReduceOnce dc drs
 
-rawReduceOnce :: Context -> Expr -> Expr
+rawReduceOnce :: Context -> ReduceState -> Expr -> (ReduceState, Expr)
 rawReduceOnce c = fn
   where
-    fn v@(Var _) = v
-    fn n@(Name _) = n
-    fn a@(Abstr _ (Appl _ (Var _))) = if tryEta c then eta a else a
-    fn a@(Abstr v e) = if tryEager c then Abstr v $ tryReduceOnce c e else a
-    fn a@(Appl (Abstr _ _) _) = beta a
-    fn a@(Appl e f) = fn e `Appl` fn f
-
-tryReduceOnce :: Context -> Expr -> Expr
-tryReduceOnce c e =
-  let e' = rawReduceOnce c e
-      l = size e
-      l' = size e'
-   in if l < l' then e else e'
+    fn s a | reduced s = (s ,a) 
+    fn s v@(Var _) = (s, v)
+    fn s n@(Name _) = (s, n)
+    fn s a@(Abstr v (Appl e (Var v')))
+      | tryEta c = if eta a == a then (s, a) else (s {reduced = True, wasEta = True}, eta a)
+    fn s a@(Abstr v e) = let (s', e') = fn s e in (s', Abstr v e')
+    fn s a@(Appl (Abstr _ _) _) | not $ reduced s = (s {reduced = True}, beta a)
+    fn s a@(Appl e f) =
+      let (s', e') = fn s e
+       in if reduced s'
+            then (s', Appl e' f)
+            else
+              let (s'', f') = fn s f
+               in (s'', Appl e f')
 
 alpha :: Expr -> Expr
 alpha (Abstr v e) = Abstr v' (rawBeta v (Var v') e)
@@ -108,4 +123,5 @@ alphaEq (Name a) (Name b) = a == b
 alphaEq (Appl a b) (Appl c d) = alphaEq a c && alphaEq b d
 alphaEq (Abstr v e) (Abstr v' e')
   | v == v' = alphaEq e e'
-  | otherwise = alphaEq e (rawBeta v (Var v') e')
+  | otherwise = alphaEq e (rawBeta v' (Var v) e')
+alphaEq _ _ = False
