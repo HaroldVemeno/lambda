@@ -1,15 +1,42 @@
-module Print (showExpr, printExpr) where
+module Print (showExpr, printExpr, showStmt, printStmt, showTree, printTree, rawShowExpr, rawShowTree) where
 
 import Control.Monad
 import Data.List
 import Types
+import Data.Bifunctor
 
-showExpr :: Result Expr -> Result String
-showExpr = fmap rawShowExpr
+showStmtWith :: (Expr -> String) -> Result Statement -> String
+showStmtWith _ (Left err) = show err
+showStmtWith f (Right (Expr e)) = f e 
+showStmtWith f (Right (Command c)) = case c of
+  CommandLet s e -> "let " ++ s ++ f e
+  CommandLoad p -> "load " ++ p
+  CommandQuit -> "quit"
+  CommandTree e -> "tree:" ++ rawShowTree e
+
+showStmt :: Result Statement -> String
+showStmt = showStmtWith rawShowExpr
+
+printStmt :: Result Statement -> IO ()
+printStmt = putStr . (++ "\n") . showStmt 
+
+showExpr :: Result Expr -> String
+showExpr = showStmt . fmap Expr
 
 printExpr :: Result Expr -> IO ()
-printExpr (Left err) = print err
-printExpr (Right ex) = putStrLn $ rawShowExpr ex
+printExpr = putStr . (++ "\n") . showExpr
+
+showTree :: Result Expr -> String
+showTree = showStmtWith rawShowTree . fmap Expr
+
+printTree :: Result Expr -> IO ()
+printTree = putStr . (++ "\n") . showTree
+
+instance Show Error where
+  show (ParseError e) = show e
+  show (ReduceError s e) = "Reduction error: " ++ s ++ "\n" ++ rawShowExpr e
+  show (TestError s) = "Test error: " ++ s
+  show (ReplError s) = undefined
 
 rawShowExpr :: Expr -> String
 rawShowExpr (Var a) = a : ""
@@ -18,7 +45,7 @@ rawShowExpr (Abstr a e@(Abstr _ _)) = '\\' : a : tail (rawShowExpr e)
 rawShowExpr (Abstr a e) = '\\' : a : '.' : rawShowExpr e
 rawShowExpr (Appl a@(Abstr _ _) b@(Appl _ _)) = "(" ++ rawShowExpr a ++ ")(" ++ rawShowExpr b ++ ")"
 rawShowExpr (Appl a b@(Appl _ _)) = rawShowExpr a ++ "(" ++ rawShowExpr b ++ ")"
-rawShowExpr (Appl a@(Abstr _ _) b@(Abstr _ _)) = "(" ++ rawShowExpr a ++ ")" ++ "(" ++ rawShowExpr b ++ ")"
+rawShowExpr (Appl a@(Abstr _ _) b@(Abstr _ _)) = "(" ++ rawShowExpr a ++ ")(" ++ rawShowExpr b ++ ")"
 rawShowExpr (Appl a@(Abstr _ _) b) = "(" ++ rawShowExpr a ++ ")" ++ rawShowExpr b
 rawShowExpr (Appl a b@(Abstr _ _)) = rawShowExpr a ++ "(" ++ rawShowExpr b ++ ")"
 rawShowExpr (Appl a b) = rawShowExpr a ++ rawShowExpr b
@@ -51,7 +78,7 @@ simpleRawShowTree = intercalate "\n" . lol
 -}
 
 rawShowTree :: Expr -> String
-rawShowTree = intercalate "\n" . lol
+rawShowTree = ('\n':) .  intercalate "\n" . lol
   where
     lol :: Expr -> [String]
     lol (Var c) = ["Var " ++ [c]]
