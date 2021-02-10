@@ -33,10 +33,10 @@ defaultContext =
   Context
     { quit = False,
       names = empty,
-      maxReductions = 200,
+      maxReductions = 800,
       reduceStepSize = 3,
-      maxSizeAbs = 1000,
-      maxSizeRel = 40,
+      maxSizeAbs = 4000,
+      maxSizeRel = 100,
       tryEta = True
     }
 
