@@ -6,13 +6,13 @@ import Print
 import Reduce
 import Types
 
-tests1 ::
+parseTests ::
   [ ( String, -- Name
       String, -- Input
       Expr -- Parse output
     )
   ]
-tests1 =
+parseTests =
   [ ( "Var test",
       "a",
       Var 'a'
@@ -48,30 +48,34 @@ tests1 =
     ( "Parens whitespace test",
       "( (  h ) (  ( p   ) )  ) ",
       Appl (Var 'h') (Var 'p')
-    )
-  ]
-
-tests2 :: [(String, String, Expr, Expr)]
-tests2 =
-  [ ( "Random 1",
+    ),
+    ( "Random 1",
       "(\\ab.b\\ca.dacb)\\po.gho",
-      Appl (Abstr 'a' (Abstr 'b' (Appl (Var 'b') (Abstr 'c' (Abstr 'a' (Appl (Appl (Appl (Var 'd') (Var 'a')) (Var 'c')) (Var 'b'))))))) (Abstr 'p' (Abstr 'o' (Appl (Appl (Var 'g') (Var 'h')) (Var 'o')))),
-      Abstr 'b' (Appl (Var 'b') (Abstr 'c' (Abstr 'a' (Appl (Appl (Appl (Var 'd') (Var 'a')) (Var 'c')) (Var 'b')))))
+      Appl (Abstr 'a' (Abstr 'b' (Appl (Var 'b') (Abstr 'c' (Abstr 'a' (Appl (Appl (Appl (Var 'd') (Var 'a')) (Var 'c')) (Var 'b'))))))) (Abstr 'p' (Abstr 'o' (Appl (Appl (Var 'g') (Var 'h')) (Var 'o'))))
     ),
     ( "Church encoding for 5",
       "\\fx.f(f(f(f(fx))))",
-      Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x'))))))),
       Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x')))))))
     ),
     ( "5 duplications",
       "(\\fx.f(f(f(f(fx)))))(\\a.aa)p",
-      Appl (Appl (Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x')))))))) (Abstr 'a' (Appl (Var 'a') (Var 'a')))) (Var 'p'),
-      undefined
+      Appl (Appl (Abstr 'f' (Abstr 'x' (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Appl (Var 'f') (Var 'x')))))))) (Abstr 'a' (Appl (Var 'a') (Var 'a')))) (Var 'p')
     )
   ]
 
-tests2' :: [(String, String, Expr)]
-tests2' = map (\(a, b, c, _) -> (a, b, c)) tests2
+reduceTests :: [(String, String, String)]
+reduceTests =
+  [ ( "9 / 3 = 3",
+      "(\\n.((\\f.(\\x.x x) (\\x.f (x x))) (\\cnmfx.(\\d.(\\n.n (\\x.(\\ab.b)) (\\ab.a)) d ((\\fx.x) f x) (f (c d m f x)))"
+        ++ "((\\mn.n (\\nfx.n (\\gh.h (g f)) (\\u.x) (\\u.u)) m) n m))) ((\\nfx. f (n f x)) n))"
+        ++ "(\\fx.f (f (f (f (f (f (f (f (f x))))))))) (\\fx.f (f (f x)))",
+      "\\fx.f(f(fx))"
+    ),
+    ( "Random 1",
+      "(\\ab.b\\ca.dacb)\\po.gho",
+      "\\b.b(\\ca.dacb)"
+    )
+  ]
 
 commandTests :: [(String, String, Command)]
 commandTests =
@@ -93,7 +97,8 @@ commandTests =
 
 testParse :: Result Bool
 testParse =
-  foldl1 (&&&) (uncurry3 doTest <$> (tests1 ++ tests2'))
+  foldl1 (&&&) (uncurry3 doTestE <$> parseTests)
+    &&& foldl1 (&&&) (uncurry3 doTestR <$> reduceTests)
     &&& foldl1 (&&&) (uncurry3 doTestC <$> commandTests)
   where
     testEq :: Statement -> Statement -> Bool
@@ -104,7 +109,7 @@ testParse =
     uncurry3 :: (a -> b -> c -> r) -> (a, b, c) -> r
     uncurry3 f (a, b, c) = f a b c
 
-    doTest c str r = doTestS c str (Expr r)
+    doTestE c str r = doTestS c str (Expr r)
     doTestC c str r = doTestS c str (Command r)
     doTestS c str r =
       let par = parseStmt c str
@@ -121,6 +126,25 @@ testParse =
                       ++ show (un par)
                       ++ "\nExpected: "
                       ++ show r
+                  )
+            else same
+
+    doTestR c f t=
+      let pf = parseExpr (c ++ " (from)") f
+          pt = parseExpr (c ++ " (to)") t
+          same = liftA2 alphaEq (reduce defaultContext =<< pf) pt
+          un (Right s) = s
+       in if same == Right False
+            then
+              Left $
+                TestError
+                  ( "Failed " ++ c
+                      ++ "\nInput: "
+                      ++ f
+                      ++ "\nOutput: "
+                      ++ showExpr pt
+                      ++ "\nExpected: "
+                      ++ t
                   )
             else same
     infixl 2 &&&
