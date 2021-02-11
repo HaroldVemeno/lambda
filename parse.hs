@@ -77,3 +77,4 @@ command =
     <|> (CommandQuit <$ string "Quit" <* ws)
     <|> (CommandLoad <$ string "Load" <* ws' <*> manyTill anyChar eof <* ws)
     <|> (CommandTree <$ string "Tree" <* ws' <*> expr)
+    <|> (CommandStep <$ string "Step" <* ws' <*> expr)
