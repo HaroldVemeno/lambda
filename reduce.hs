@@ -77,7 +77,12 @@ rawReduceOnce c = fn
     fn s v@(Var _) = (s, v)
     fn s n@(Name _) = (s, n)
     fn s a@(Abstr v i@(Appl e (Var v')))
-      | tryEta c = if eta a == a then let (s', i') = fn s i in (s', Abstr v i') else (s {reduced = True, wasEta = True}, eta a)
+      | tryEta c =
+        if eta a == a
+          then
+            let (s', i') = fn s i
+             in (s', Abstr v i')
+          else (s {reduced = True, wasEta = True}, eta a)
     fn s a@(Abstr v e) = let (s', e') = fn s e in (s', Abstr v e')
     fn s a@(Appl (Abstr _ _) _) | not $ reduced s = (s {reduced = True}, beta a)
     fn s a@(Appl e f) =
