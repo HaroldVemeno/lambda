@@ -3,9 +3,11 @@
 module Reduce where
 
 import Data.Char (chr, ord)
+import Data.Map (member, (!))
 import Debug.Trace
 import Print
 import Types
+import Data.List
 
 dc :: Context
 dc = defaultContext
@@ -15,14 +17,14 @@ basicReduce = reduce dc
 
 data ReduceState = ReduceState
   { reduced :: Bool,
-    wasEta :: Bool
+    by :: String
   }
 
 drs :: ReduceState
 drs =
   ReduceState
     { reduced = False,
-      wasEta = False
+      by = "Nothing?? how did u get here"
     }
 
 reduce :: Context -> Expr -> Result Expr
@@ -61,15 +63,14 @@ stepReduce c e0 = start e0 0
                 printExpr (Right e')
                 return . Left $ ReduceError "Doesn't halt" e0
               | otherwise -> do
-                putStrLn $
-                  "Reduction " ++ show n' ++ ": "
-                    ++ if wasEta lst then "Eta" else "Beta"
+                putStrLn $ "Reduction" ++ show n' ++ " by " ++ by lst
                 printExpr (Right e')
                 start e' n'
 
 basicRawReduceOnce :: Expr -> Expr
 basicRawReduceOnce = snd . rawReduceOnce dc drs
 
+-- TODO: check for unbounds in Names
 rawReduceOnce :: Context -> ReduceState -> Expr -> (ReduceState, Expr)
 rawReduceOnce c = fn
   where
@@ -82,9 +83,11 @@ rawReduceOnce c = fn
           then
             let (s', i') = fn s i
              in (s', Abstr v i')
-          else (s {reduced = True, wasEta = True}, eta a)
+          else (s {reduced = True, by = "Eta"}, eta a)
     fn s a@(Abstr v e) = let (s', e') = fn s e in (s', Abstr v e')
-    fn s a@(Appl (Abstr _ _) _) | not $ reduced s = (s {reduced = True}, beta a)
+    fn s a@(Appl (Abstr _ _) _) | not $ reduced s = (s {reduced = True, by = "Beta"}, beta a)
+    fn s a@(Appl (Name n) e)
+      | n `member` names c = (s {reduced = True, by = "Name Substitution of " ++ n}, Appl (names c ! n) e)
     fn s a@(Appl e f) =
       let (s', e') = fn s e
        in if reduced s'
@@ -116,7 +119,7 @@ rawBeta f t e@(Var c)
 rawBeta f t e@(Appl a b) = Appl (rawBeta f t a) (rawBeta f t b)
 rawBeta f t e@(Name n) = e
 rawBeta f t e@(Abstr v e')
-  | v == f || t == Var v = rawBeta f t $ alpha e
+  | v == f || v `elem` getUnboundsIn t = rawBeta f t $ alpha e
   | otherwise = Abstr v (rawBeta f t e')
 
 eta :: Expr -> Expr
@@ -139,6 +142,20 @@ infixr 9 ...
 
 noUnboundIn :: Expr -> Expr -> Bool
 noUnboundIn = not ... unboundIn
+
+getUnboundsIn :: Expr -> [Char]
+getUnboundsIn (Name _) = []
+getUnboundsIn (Var v) = [v]
+getUnboundsIn (Appl a b) = nub $ getUnboundsIn a ++ getUnboundsIn b
+getUnboundsIn (Abstr v e) = delete v $ getUnboundsIn e
+
+isCombinator :: Expr -> Bool
+isCombinator = yee []
+  where
+    yee s (Var v) = v `elem` s
+    yee s (Name n) = True
+    yee s (Appl a b) = yee s a && yee s b
+    yee s (Abstr v e) = yee (v : s) e
 
 size :: Expr -> Int
 size (Var _) = 1
