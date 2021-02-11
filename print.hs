@@ -9,10 +9,11 @@ showStmtWith :: (Expr -> String) -> Result Statement -> String
 showStmtWith _ (Left err) = show err
 showStmtWith f (Right (Expr e)) = f e 
 showStmtWith f (Right (Command c)) = case c of
-  CommandLet s e -> "let " ++ s ++ f e
-  CommandLoad p -> "load " ++ p
-  CommandQuit -> "quit"
-  CommandTree e -> "tree:" ++ rawShowTree e
+  CommandLet s e -> "Let " ++ s ++ f e
+  CommandLoad p -> "Load " ++ p
+  CommandQuit -> "Quit"
+  CommandTree e -> "Tree:" ++ f e
+  CommandStep e -> "Step:" ++ f e
 
 showStmt :: Result Statement -> String
 showStmt = showStmtWith rawShowExpr
