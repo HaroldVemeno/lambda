@@ -15,6 +15,7 @@ data Command
   | CommandLoad String
   | CommandLet String Expr
   | CommandTree Expr
+  | CommandStep Expr
   deriving (Show, Eq)
 
 data Context = Context
@@ -33,8 +34,8 @@ defaultContext =
   Context
     { quit = False,
       names = empty,
-      maxReductions = 800,
-      reduceStepSize = 3,
+      maxReductions = 4000,
+      reduceStepSize = 1,
       maxSizeAbs = 4000,
       maxSizeRel = 100,
       tryEta = True
