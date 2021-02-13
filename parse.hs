@@ -1,6 +1,6 @@
 --{-# LANGUAGE FlexibleContexts #-}
 
-module Parse (parseExpr, parseStmt) where
+module Parse (parseExpr, parseStmt, parseFile) where
 
 import Control.Applicative (liftA2)
 import Data.Bifunctor
@@ -15,10 +15,10 @@ parseBy par name str = case parse par name str of
   Left pe -> Left $ ParseError pe
 
 parseStmt :: SourceName -> String -> Result Statement
-parseStmt = parseBy start
+parseStmt = parseBy (start <* eof)
 
 parseExpr :: SourceName -> String -> Result Expr
-parseExpr = parseBy startExpr
+parseExpr = parseBy (startExpr <* eof)
 
 ws :: Parser ()
 ws = spaces
@@ -30,10 +30,10 @@ start :: Parser Statement
 start = try (Command <$> startCommand) <|> Expr <$> startExpr
 
 startExpr :: Parser Expr
-startExpr = ws *> expr <* ws <* eof
+startExpr = ws *> expr <* ws 
 
 startCommand :: Parser Command
-startCommand = ws *> command <* ws <* eof
+startCommand = ws *> command <* ws
 
 expr :: Parser Expr
 expr = try appl <|> abstr <|> parened <|> try name <|> var
@@ -78,3 +78,7 @@ command =
     <|> (CommandLoad <$ string "Load" <* ws' <*> manyTill anyChar eof <* ws)
     <|> (CommandTree <$ string "Tree" <* ws' <*> expr)
     <|> (CommandStep <$ string "Step" <* ws' <*> expr)
+
+
+parseFile :: SourceName -> String -> Result [Statement]
+parseFile = parseBy (many (start <* (eof <|> () <$ newline)))
