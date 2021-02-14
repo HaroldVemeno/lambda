@@ -1,7 +1,9 @@
+{-# LANGUAGE TupleSections #-}
 module Main where
 
+import Prelude hiding (lookup)
 import Control.Monad
-import Data.Map (insert)
+import Data.Map (insert, lookup, (!))
 import Debug.Trace
 import Parse
 import Print
@@ -43,15 +45,19 @@ repl = repl' defaultContext
       CommandTree e -> return (rawShowTree e, c)
       CommandLoad f -> do
         file <- readFile f
-        putStrLn $ "The file :\n" ++ file
+        --putStrLn $ "The file :\n" ++ file
         let p = parseFile f file
         case p of
           Left err -> return (show err, c)
           Right a -> do
             c' <- foldl (\c f -> (\c -> snd <$> doStmt c (Right (Command f))) =<< c) (return c) a
-            print $ names c'
+            --print $ names c'
             return ("", c')
       CommandStep e -> stepReduce c e >> return ("", c)
+      CommandShow (Name n) -> return $ (,c) $ case lookup n (names c) of
+        Just e -> rawShowExpr e
+        Nothing -> n ++ " was not found."
+      CommandShow e -> return (rawShowExpr e, c)
 
 test :: Result Bool
 test = testParse
