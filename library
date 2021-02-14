@@ -1,7 +1,38 @@
 Let 0 \fx.x
 Let 1 \fx.fx
 Let 2 \fx.f(fx)
-Let 3 \fx.f(
-    f(f
-x))
+Let 3 \fx.f(f(fx))
 Let 4 \fx.f(f(f(fx)))
+
+Let Succ \nfx.f(nfx)
+Let Flip \fxy.fyx
+Let P \xyf.fxy
+
+Let T \xy.x
+Let F \xy.y 
+Let Not \x.x F T
+Let And \xy.xyx 
+Let Or  \xy.xxy 
+LEt Eq \xy.x y (Not y)
+Let Xor \xy.x (Not y) y
+
+Let Fst T
+Let Snd F
+
+Let I \x.x
+Let Y \f.(\a.aa)(\a.f(aa))
+
+Let Add \nm. n Succ m
+Let Mul \nmf. n (m f)
+Let Pow \nm. m n
+
+Let Wrap \af.fa
+Let Const \af.a
+
+Let Pred  \n.n (\a. Wrap (a Succ)) (Const 0) I
+Let Pred' \n.n (\p. P (p Snd) (Succ (p Snd))) (P 0 0) Fst
+
+Let Sub \nm.m Pred n
+
+Let S \xzy. xz(yz)
+Let K \xy.x
