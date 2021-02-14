@@ -3,11 +3,11 @@
 module Reduce where
 
 import Data.Char (chr, ord)
+import Data.List
 import Data.Map (member, (!))
 import Debug.Trace
 import Print
 import Types
-import Data.List
 
 dc :: Context
 dc = defaultContext
@@ -63,7 +63,7 @@ stepReduce c e0 = start e0 0
                 printExpr (Right e')
                 return . Left $ ReduceError "Doesn't halt" e0
               | otherwise -> do
-                putStrLn $ "Reduction" ++ show n' ++ " by " ++ by lst
+                putStrLn $ show n' ++ ": Reduction" ++ " by " ++ by lst
                 printExpr (Right e')
                 start e' n'
 
