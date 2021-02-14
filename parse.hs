@@ -87,11 +87,12 @@ load = to <$> satisfy is <?> "Load x"
 
 command :: Parser Command
 command =
-  try (CommandLet <$ kw "Let" <*> nameStr <*> expr)
-    <|> load
-    <|> (CommandQuit <$ kw "Quit")
+    (CommandQuit <$ kw "Quit")
     <|> (CommandTree <$ kw "Tree" <*> expr)
+    <|> try (CommandShow <$ kw "Show" <*> expr)
     <|> (CommandStep <$ kw "Step" <*> expr)
+    <|> try (CommandLet <$ kw "Let" <*> nameStr <*> expr)
+    <|> load
   where 
     kw n = tok $ KW n
     nameStr = (\(Name n) -> n) <$> name
