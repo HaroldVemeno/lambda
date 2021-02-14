@@ -1,4 +1,4 @@
-module Lexer where
+module Lexer (Token(..), TokenPos, token, tokens, tokenize) where
 
 import Control.Monad
 import Print
@@ -7,15 +7,14 @@ import Text.Parsec.String
 import Types hiding (Expr (..))
 
 data Token
-  = Name String
-  | Var Char
+  = NAME String
+  | VAR Char
   | OP
   | CP
   | BS
-  | Dot
+  | DOT
   | KW String
-  | Load String
-  | FP String
+  | LOAD String
   deriving (Show, Eq)
 
 type TokenPos = (Token, SourcePos)
@@ -33,12 +32,12 @@ posify p = do
   return (t, pos)
 
 name, var, op, cp, bs, dot, kw, load :: Parser Token
-name = Name <$> nameStr
+name = NAME <$> nameStr
 
 nameStr :: Parser String
-nameStr = (:) <$> (upper <|> digit) <*> many alphaNum
+nameStr = (:) <$> (upper <|> digit <|> oneOf "-_'") <*> many alphaNum
 
-var = Var <$> lower
+var = VAR <$> lower
 
 op = OP <$ char '('
 
@@ -46,19 +45,19 @@ cp = CP <$ char ')'
 
 bs = BS <$ char '\\'
 
-dot = Dot <$ char '.'
+dot = DOT <$ char '.'
 
 kw = KW <$> choice (fmap string ["Let", "Tree", "Quit", "Step"]) <?> "keyword"
 
-load = Load <$ string "Load" <* sp' <*> many1 anyChar <* sp <* (eof <|> void newline)
+load = LOAD <$ try (string "Load") <* sp' <*> many1 anyChar <* sp <* (eof <|> void newline)
 
 token :: Parser TokenPos
-token = choice (posify <$> [try load, try kw, var, name, op, cp, bs, dot]) <?> "token start"
+token = choice (posify <$> [load, try kw, var, name, op, cp, bs, dot]) <?> "token start"
 
 tokens :: Parser [TokenPos]
 tokens = ws *> many (token <* ws) <* eof
 
 tokenize :: SourceName -> String -> Result [TokenPos]
-tokenize sn str = case parse tokens sn str of
+tokenize sn str = case parse tokens (sn ++ " (tokenization)") str of
   Right a -> Right a
   Left err -> Left (ParseError err)

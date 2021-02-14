@@ -48,7 +48,7 @@ repl = repl' defaultContext
         case p of
           Left err -> return (show err, c)
           Right a -> do
-            c' <- foldl (\c f -> (\c -> snd <$> doStmt c (Right f)) =<< c) (return c) a
+            c' <- foldl (\c f -> (\c -> snd <$> doStmt c (Right (Command f))) =<< c) (return c) a
             print $ names c'
             return ("", c')
       CommandStep e -> stepReduce c e >> return ("", c)
