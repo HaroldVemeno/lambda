@@ -1,1 +1,7 @@
 Let 0 \fx.x
+Let 1 \fx.fx
+Let 2 \fx.f(fx)
+Let 3 \fx.f(
+    f(f
+x))
+Let 4 \fx.f(f(f(fx)))
