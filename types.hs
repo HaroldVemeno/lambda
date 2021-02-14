@@ -16,6 +16,8 @@ data Command
   | CommandLet String Expr
   | CommandTree Expr
   | CommandStep Expr
+  | CommandShow Expr
+  | CommandSet String String
   deriving (Show, Eq)
 
 data Context = Context
