@@ -9,11 +9,13 @@ Let Flip \fxy.fyx
 Let P \xyf.fxy
 
 Let T \xy.x
+Let True T
 Let F \xy.y 
+Let False F
 Let Not \x.x F T
 Let And \xy.xyx 
 Let Or  \xy.xxy 
-LEt Eq \xy.x y (Not y)
+Let Eq \xy.x y (Not y)
 Let Xor \xy.x (Not y) y
 
 Let Fst T
@@ -22,12 +24,13 @@ Let Snd F
 Let I \x.x
 Let Y \f.(\a.aa)(\a.f(aa))
 
+Let Const \af.a
+Let Wrap \af.fa
+
 Let Add \nm. n Succ m
 Let Mul \nmf. n (m f)
 Let Pow \nm. m n
-
-Let Wrap \af.fa
-Let Const \af.a
+Let Is0 \n.n (Const False) True
 
 Let Pred  \n.n (\a. Wrap (a Succ)) (Const 0) I
 Let Pred' \n.n (\p. P (p Snd) (Succ (p Snd))) (P 0 0) Fst
@@ -36,3 +39,6 @@ Let Sub \nm.m Pred n
 
 Let S \xzy. xz(yz)
 Let K \xy.x
+
+Let Fact \n. n (\p. P (p Mul) (Succ (p Snd))) (P 1 1) Fst
+Let Fact' Y\rn. Is0 n 1 (Mul n (r (Pred n)))
