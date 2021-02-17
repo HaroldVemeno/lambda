@@ -54,7 +54,7 @@ var = to <$> satisfy is <?> "Var"
 name :: Parser Expr
 name = to <$> satisfy is <?> "Name" 
   where
-    is x = case x of { NAME a -> True; _ -> False}
+    is x = case x of { NAME _ -> True; _ -> False}
     to (NAME x) = Name x
 
 expr :: Parser Expr
@@ -80,19 +80,26 @@ parened :: Parser Expr
 parened = tok OP *> expr <* tok CP
 
 load :: Parser Command
-load = to <$> satisfy is <?> "Load x" 
+load = to <$> satisfy is <?> "Load" 
   where
-    is x = case x of { LOAD a -> True; _ -> False}
+    is x = case x of { LOAD _ -> True; _ -> False}
     to (LOAD x) = CommandLoad x
+
+set :: Parser Command 
+set = to <$> satisfy is <?> "Set"
+  where 
+    is x = case x of { SET _ _ -> True; _ -> False}
+    to (SET s i) = CommandSet s i
 
 command :: Parser Command
 command =
     (CommandQuit <$ kw "Quit")
     <|> (CommandTree <$ kw "Tree" <*> expr)
-    <|> try (CommandShow <$ kw "Show" <*> expr)
-    <|> (CommandStep <$ kw "Step" <*> expr)
     <|> try (CommandLet <$ kw "Let" <*> nameStr <*> expr)
     <|> load
+    <|> try (CommandShow <$ kw "Show" <*> expr)
+    <|> try (CommandStep <$ kw "Step" <*> expr)
+    <|> set
   where 
     kw n = tok $ KW n
     nameStr = (\(Name n) -> n) <$> name
