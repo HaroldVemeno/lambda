@@ -27,7 +27,8 @@ data Context = Context
     reduceStepSize :: Int,
     maxSizeRel :: Int,
     maxSizeAbs :: Int,
-    tryEta :: Bool
+    tryEta :: Bool,
+    forceNames :: Bool
   }
   deriving (Show)
 
@@ -40,7 +41,8 @@ defaultContext =
       reduceStepSize = 1,
       maxSizeAbs = 4000,
       maxSizeRel = 100,
-      tryEta = True
+      tryEta = True,
+      forceNames = False
     }
 
 data Statement
