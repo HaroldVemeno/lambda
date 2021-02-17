@@ -47,7 +47,7 @@ tok t = satisfy (== t) <?> show t
 var :: Parser Expr
 var = to <$> satisfy is <?> "Var" 
   where
-    is x = case x of { VAR a -> True; _ -> False}
+    is x = case x of { VAR _ -> True; _ -> False}
     to (VAR x) = Var x
 
 
