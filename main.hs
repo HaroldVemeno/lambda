@@ -1,10 +1,14 @@
 {-# LANGUAGE TupleSections #-}
+
 module Main where
 
-import Prelude hiding (lookup)
+import Control.Applicative
 import Control.Monad
 import Data.Map (insert, lookup, (!))
+import Data.Maybe
 import Debug.Trace
+import Text.Read
+import Prelude hiding (lookup)
 import Parse
 import Print
 import Reduce
@@ -38,10 +42,7 @@ repl = repl' defaultContext
       CommandLet n e ->
         --redefinition warning?
         return $
-          let r = reduce c e
-           in case r of
-                Left err -> (show err, c)
-                Right e' -> ("Bound", c {names = insert n e' (names c)})
+          let r = tryReduce c e in ("Bound", c {names = insert n r (names c)})
       CommandTree e -> return (rawShowTree e, c)
       CommandLoad f -> do
         file <- readFile f
@@ -54,10 +55,21 @@ repl = repl' defaultContext
             --print $ names c'
             return ("", c')
       CommandStep e -> stepReduce c e >> return ("", c)
-      CommandShow (Name n) -> return $ (,c) $ case lookup n (names c) of
-        Just e -> rawShowExpr e
-        Nothing -> n ++ " was not found."
+      CommandShow (Name n) -> return $
+        (,c) $ case lookup n (names c) of
+          Just e -> rawShowExpr e
+          Nothing -> n ++ " was not found."
       CommandShow e -> return (rawShowExpr e, c)
+      CommandSet n v ->
+        let prp f t = show f ++ " -> " ++ show t
+            try v r = let e = readMaybe v in maybe ("Bad value", c) r e
+         in return $ case n of
+              "maxReductions" -> try v $ \e -> (prp (maxReductions c) e, c {maxReductions = e})
+              "reduceStepSize" -> try v $ \e -> (prp (reduceStepSize c) e, c {reduceStepSize = e})
+              "maxSizeAbs" -> try v $ \e -> (prp (maxSizeAbs c) e, c {maxSizeAbs = e})
+              "maxSizeRel" -> try v $ \e -> (prp (maxSizeRel c) e, c {maxSizeRel = e})
+              "tryEta" -> try v $ \e -> (prp (tryEta c) e, c {tryEta = e})
+              _ -> ("Unknown setting", c)
 
 test :: Result Bool
 test = testParse
