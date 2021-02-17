@@ -1,6 +1,7 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE MultiWayIf #-}
 
-module Reduce where
+module Reduce (reduce, basicReduce, tryReduce, stepReduce, alphaEq) where
 
 import Data.Char (chr, ord)
 import Data.List
@@ -48,9 +49,13 @@ stepReduce c e0 = start e0 0
   where
     l0 = size e0
     start e n =
-      let (lst, e') = rawReduceOnce c drs e
+      let itl = iterate (rawReduceOnce c drs . snd) (drs, e)
+          red = take (reduceStepSize c) . takeWhile (\(rs, _) -> reduced rs) . tail $ itl
+          rss = fst <$> red
+          dn' = length red
+          (lst, e') = if null red then head itl else last red
           l = size e'
-          n' = if reduced lst then n + 1 else n
+          n' = n + dn'
        in if
               | e == e' || not (reduced lst) -> do
                 putStrLn $ "Reduction finished after " ++ show n' ++ " reductions!"
@@ -59,13 +64,19 @@ stepReduce c e0 = start e0 0
               | n >= maxReductions c
                   || l > (maxSizeRel c * l0)
                   || l > maxSizeAbs c -> do
-                putStrLn "Expression doesn't halt and keeps expanding."
+                putStrLn "Expression doesn't halt in limits and keeps expanding."
                 printExpr (Right e')
-                return . Left $ ReduceError "Doesn't halt" e0
+                return . Left $ ReduceError "No halt in limit" e0
               | otherwise -> do
-                putStrLn $ show n' ++ ": Reduction" ++ " by " ++ by lst
+                let out = intercalate "\n" . zipWith ((++) . show) [n+1..n'] $ (": Reduction by " ++) . by <$> filter reduced rss
+                putStrLn out
                 printExpr (Right e')
                 start e' n'
+
+tryReduce :: Context -> Expr -> Expr
+tryReduce c e0 = case reduce c{maxReductions = 100, maxSizeAbs = 400, maxSizeRel = 20, forceNames = True} e0 of
+  Right e -> e
+  Left  a -> e0
 
 basicRawReduceOnce :: Expr -> Expr
 basicRawReduceOnce = snd . rawReduceOnce dc drs
@@ -76,7 +87,8 @@ rawReduceOnce c = fn
   where
     fn s a | reduced s = (s, a)
     fn s v@(Var _) = (s, v)
-    fn s n@(Name _) = (s, n)
+    fn s m@(Name n) | forceNames c && n `member` names c= (s{reduced = True, by = "Forced Name Substitution of " ++ n}, names c ! n)
+                    | otherwise = (s, m)
     fn s a@(Abstr v i@(Appl e (Var v')))
       | tryEta c =
         if eta a == a
