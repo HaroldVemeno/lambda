@@ -42,11 +42,11 @@ op = OP <$ char '('
 cp = CP <$ char ')'
 bs = BS <$ char '\\'
 dot = DOT <$ char '.'
+load = LOAD <$ try (string "Load") <* sp' <*> many1 anyChar <* sp <* (eof <|> void newline)
+set = SET <$ try (string "Set") <* sp' <*> many1 letter <* sp' <*> many1 anyChar <* (eof <|> void newline)
 kw = KW <$> choice [s "Let", s "Tree", s "Quit", try $ s "Step", s "Show"] <?> "keyword"
   where
     s = string
-load = LOAD <$ try (string "Load") <* sp' <*> many1 anyChar <* sp <* (eof <|> void newline)
-set = SET <$ try (string "Set") <* sp' <*> many1 anyChar <* sp' <*> many1 anyChar <* (eof <|> void newline)
 
 token :: Parser TokenPos
 token = choice (posify <$> [load, set, try kw, var, name, op, cp, bs, dot]) <?> "token start"
