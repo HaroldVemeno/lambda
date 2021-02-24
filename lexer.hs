@@ -44,7 +44,7 @@ bs = BS <$ char '\\'
 dot = DOT <$ char '.'
 load = LOAD <$ try (string "Load") <* sp' <*> many1 anyChar <* sp <* (eof <|> void newline)
 set = SET <$ try (string "Set") <* sp' <*> many1 letter <* sp' <*> many1 anyChar <* (eof <|> void newline)
-kw = KW <$> choice [s "Let", s "Tree", s "Quit", try $ s "Step", s "Show"] <?> "keyword"
+kw = KW <$> choice [s "Let", s "Tree", s "Quit", (:) <$> char 'S' <*> choice [s "tep", s "how", s "kify"]] <?> "keyword"
   where
     s = string
 
