@@ -91,6 +91,8 @@ set = to <$> satisfy is <?> "Set"
     is x = case x of { SET _ _ -> True; _ -> False}
     to (SET s i) = CommandSet s i
 
+
+
 command :: Parser Command
 command =
     (CommandQuit <$ kw "Quit")
@@ -99,6 +101,7 @@ command =
     <|> load
     <|> try (CommandShow <$ kw "Show" <*> expr)
     <|> try (CommandStep <$ kw "Step" <*> expr)
+    <|> try (CommandSkify <$ kw "Skify" <*> expr)
     <|> set
   where 
     kw n = tok $ KW n
