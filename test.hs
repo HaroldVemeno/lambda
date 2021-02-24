@@ -5,6 +5,7 @@ import Parse
 import Print
 import Reduce
 import Types
+import Misc
 
 parseTests ::
   [ ( String, -- Name
