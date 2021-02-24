@@ -15,6 +15,7 @@ import Reduce
 import System.IO
 import Test
 import Types
+import Misc
 
 main :: IO ()
 main = repl
@@ -42,7 +43,7 @@ repl = repl' defaultContext
       CommandLet n e ->
         --redefinition warning?
         return $
-          let r = tryReduce c e in ("Bound", c {names = insert n r (names c)})
+          let r = tryReduceLet c e in ("Bound", c {names = insert n r (names c)})
       CommandTree e -> return (rawShowTree e, c)
       CommandLoad f -> do
         file <- readFile f
@@ -69,13 +70,15 @@ repl = repl' defaultContext
               "maxSizeAbs" -> try v $ \e -> (prp (maxSizeAbs c) e, c {maxSizeAbs = e})
               "maxSizeRel" -> try v $ \e -> (prp (maxSizeRel c) e, c {maxSizeRel = e})
               "tryEta" -> try v $ \e -> (prp (tryEta c) e, c {tryEta = e})
+              "forceNames" -> try v $ \e -> (prp (forceNames c) e, c {forceNames = e})
               _ -> ("Unknown setting", c)
+      CommandSkify e -> return (rawShowExpr $ skify c e, c) 
 
 test :: Result Bool
 test = testParse
 
 quickParse :: IO ()
-quickParse = printExpr . parseExpr "input" =<< getLine
+quickParse = print . parseExpr "input" =<< getLine
 
 quickReduce :: IO ()
 quickReduce = printExpr . (basicReduce <=< parseExpr "input") =<< getLine
