@@ -1,4 +1,5 @@
 *.exe
 *.o
 *.hi
+.vscode
 lambda.js.txt
