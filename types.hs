@@ -18,6 +18,7 @@ data Command
   | CommandStep Expr
   | CommandShow Expr
   | CommandSet String String
+  | CommandSkify Expr
   deriving (Show, Eq)
 
 data Context = Context
@@ -37,10 +38,10 @@ defaultContext =
   Context
     { quit = False,
       names = empty,
-      maxReductions = 4000,
+      maxReductions = 100000,
       reduceStepSize = 1,
-      maxSizeAbs = 4000,
-      maxSizeRel = 100,
+      maxSizeAbs = 8000,
+      maxSizeRel = 10000,
       tryEta = True,
       forceNames = False
     }
