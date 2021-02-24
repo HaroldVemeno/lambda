@@ -3,6 +3,12 @@ Let 1 \fx.fx
 Let 2 \fx.f(fx)
 Let 3 \fx.f(f(fx))
 Let 4 \fx.f(f(f(fx)))
+Let 5 Succ 4
+Let 6 Succ 5
+Let 7 Succ 6
+Let 8 Succ 7
+Let 9 Succ 8
+
 
 Let Succ \nfx.f(nfx)
 Let Flip \fxy.fyx
@@ -37,7 +43,7 @@ Let Pred' \n.n (\p. P (p Snd) (Succ (p Snd))) (P 0 0) Fst
 
 Let Sub \nm.m Pred n
 
-Let S \xzy. xz(yz)
+Let S \xyz. xz(yz)
 Let K \xy.x
 
 Let Fact \n. n (\p. P (p Mul) (Succ (p Snd))) (P 1 1) Fst
