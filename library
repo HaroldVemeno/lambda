@@ -8,6 +8,7 @@ Let 6 Succ 5
 Let 7 Succ 6
 Let 8 Succ 7
 Let 9 Succ 8
+Let 10 Succ 9
 
 
 Let Succ \nfx.f(nfx)
@@ -48,3 +49,6 @@ Let K \xy.x
 
 Let Fact \n. n (\p. P (p Mul) (Succ (p Snd))) (P 1 1) Fst
 Let Fact' Y\rn. Is0 n 1 (Mul n (r (Pred n)))
+
+Let Fib \n. n (\p. P (Add (p Fst) (p Snd)) (p Fst)) (P 1 0) Fst
+Let Fib' Y\fn.Is0 n 1 (Is0 (Pred n) 1 (Add (f (Pred n)) (f (Pred (Pred n)))))
