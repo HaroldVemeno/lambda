@@ -1,4 +1,6 @@
 *.exe
+Main
+a
 *.o
 *.hi
 .vscode
