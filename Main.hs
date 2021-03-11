@@ -71,7 +71,15 @@ repl = repl' defaultContext
               "maxSizeRel" -> try v $ \e -> (prp (maxSizeRel c) e, c {maxSizeRel = e})
               "tryEta" -> try v $ \e -> (prp (tryEta c) e, c {tryEta = e})
               "forceNames" -> try v $ \e -> (prp (forceNames c) e, c {forceNames = e})
-              ""
+              "" -> (unlines 
+                [
+                  "maxReductions",
+                  "reduceStepSize",
+                  "maxSizeAbs",
+                  "maxSizeRel",
+                  "tryEta",
+                  "forceNames"
+                ], c)
               _ -> ("Unknown setting", c)
       CommandSkify e -> return (rawShowExpr $ skify c e, c) 
 
