@@ -20,11 +20,12 @@ data Token
 
 type TokenPos = (Token, SourcePos)
 
-ws, ws', sp, sp' :: Parser ()
+ws, ws', sp, sp', eol :: Parser ()
 ws = spaces
 ws' = void $ many1 space
 sp = void . many $ oneOf " \f\t\v"
 sp' = void . many1 $ oneOf " \f\t\v"
+eol = eof <|> void newline
 
 posify :: Parser Token -> Parser TokenPos
 posify p = do
@@ -42,8 +43,8 @@ op = OP <$ char '('
 cp = CP <$ char ')'
 bs = BS <$ char '\\'
 dot = DOT <$ char '.'
-load = LOAD <$ try (string "Load") <* sp' <*> many1 anyChar <* sp <* (eof <|> void newline)
-set = SET <$ try (string "Set") <* sp' <*> many1 letter <* sp' <*> many1 anyChar <* (eof <|> void newline)
+load = LOAD <$ try (string "Load") <* sp' <*> many1 anyChar <* sp <* eol
+set = try (string "Set") *> ( SET "" "" <$ eol <|> SET <$ sp' <*> many letter <* sp' <*> many anyChar <* eol)
 kw = KW <$> choice [s "Let", s "Tree", s "Quit", (:) <$> char 'S' <*> choice [s "tep", s "how", s "kify"]] <?> "keyword"
   where
     s = string
