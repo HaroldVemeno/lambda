@@ -85,7 +85,7 @@ rawShowTree = ('\n':) .  intercalate "\n" . lol
     lol (Var c) = ["Var " ++ [c]]
     lol (Name n) = ["Name " ++ n]
     lol (Appl a b) = case a of
-      --  ¯\_(ツ)_/¯ lol no
+      --  ¯\_(ツ)_/¯ lol 174 columns
       Appl _ _ -> join [[head $ lol a], takeWhile ((/= "`-") . take 2) . tail . lol $ a, mid . fmap (drop 2) . dropWhile ((/= "`-") . take 2) . tail . lol $ a, end . lol $ b]
       _ -> join [["Appl"], mid $ lol a, end $ lol b]
     lol (Abstr c e) = case e of
